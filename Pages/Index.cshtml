@@ -1,0 +1,59 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "PDF Viewer";
+    Layout = "_Layout";
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="fw-bold">Sales Dashboard Report</span>
+                    <span class="badge bg-warning text-dark" id="statusBadge">Loading...</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-light fw-semibold" id="reloadBtn" onclick="reloadPdf()">
+                        ⟳ New Report
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-0" style="height: 85vh;">
+                <iframe id="pdfFrame" style="width:100%; height:100%; border:none;"
+                        sandbox="allow-scripts allow-same-origin allow-downloads allow-popups allow-forms" allowfullscreen>
+                </iframe>
+            </div>
+
+            <div class="card-footer text-muted small d-flex justify-content-between">
+                <span>Each reload calls <code>GET /pdf/stream?t={timestamp}</code> — unique content every time</span>
+                <span id="loadTime"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function reloadPdf() {
+            const t0 = performance.now();
+
+            $('#statusBadge')
+                .text('Generating...')
+                .attr('class', 'badge bg-warning text-dark');
+
+            $('#pdfFrame').one('load', function () {
+                const elapsed = Math.round(performance.now() - t0);
+                $('#statusBadge').text('Loaded').attr('class', 'badge bg-success');
+                $('#loadTime').text(`Generated + loaded in ${elapsed} ms`);
+            });
+
+            // encodeURIComponent ensures the value is treated as data, never as part of the path
+            const pdfUrl = encodeURIComponent('/pdf/stream?t=' + Date.now());
+            $('#pdfFrame').attr('src', '/pdfjs/web/viewer.html?file=' + pdfUrl);
+        }
+
+        $(reloadPdf);
+    </script>
+}
